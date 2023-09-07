@@ -1,6 +1,31 @@
 import 'package:flutter/material.dart';
+import 'dart:ffi';
+
+import 'package:ffi/ffi.dart';
+
+
+// FFI signature of the hello_world C function
+typedef ClGetPlatformIDsFunc = Int32 Function(Uint32 num_entries, Pointer<Void>platforms, Pointer<Uint32> num_platforms);
+// Dart type definition for calling the C foreign function
+typedef ClGetPlatformIDs = int Function(int num_entries, Pointer<Void>platforms, Pointer<Uint32> num_platforms);
+
 
 void main() {
+
+  final dylib = DynamicLibrary.open('libOpenCL.so');
+
+  final p = calloc<Uint32>();
+  p.value = 0;
+
+  final clGetPlatformIDsPointer = dylib
+        .lookup<NativeFunction<ClGetPlatformIDsFunc>>('clGetPlatformIDs');
+  final hello = clGetPlatformIDsPointer.asFunction<ClGetPlatformIDs>();
+
+  int ret = hello(0, nullptr, p);
+  print('clGetPlatformIDs ret: $ret, p: ${p.value}');
+
+  calloc.free(p);
+
   runApp(const MyApp());
 }
 
